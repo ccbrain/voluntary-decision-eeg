@@ -148,13 +148,15 @@ save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedData.
 
 %% Figures
 
+WhatToPlot = SelectedMean;
+
 % Plot mean of the three equal conditions in one graph 
-tmpA = [mean(SelectedMean.Equal100(:,:),1);
-    mean(SelectedMean.Equal80(:,:),1);
-    mean(SelectedMean.Equal20(:,:),1);
-    mean(SelectedMean.Control100(:,:),1);
-    mean(SelectedMean.Control80(:,:),1);
-    mean(SelectedMean.Control20(:,:),1)];
+tmpA = [mean(WhatToPlot.Equal100(:,:),1);
+    mean(WhatToPlot.Equal80(:,:),1);
+    mean(WhatToPlot.Equal20(:,:),1);
+    mean(WhatToPlot.Control100(:,:),1);
+    mean(WhatToPlot.Control80(:,:),1);
+    mean(WhatToPlot.Control20(:,:),1)];
 
 limits = 1.1*[min(min(tmpA)) max(max(tmpA))];
 clear tmpA
@@ -162,42 +164,42 @@ clear tmpA
 figure;
 suptitle('equal conditions');
 subplot(3,1,1);
-A = [smooth(mean(SelectedMean.Equal100(:,:),1))';
-    smooth(mean(SelectedMean.Control100(:,:),1))'];
+A = [smooth(mean(WhatToPlot.Equal100(:,:),1))';
+    smooth(mean(WhatToPlot.Control100(:,:),1))'];
 plot_erp(A, EEG.srate, 3, {'Equal100', 'Control100'}, limits);
 
 subplot(3,1,2);
-A = [smooth(mean(SelectedMean.Equal80(:,:),1))';
-    smooth(mean(SelectedMean.Control80(:,:),1))'];
+A = [smooth(mean(WhatToPlot.Equal80(:,:),1))';
+    smooth(mean(WhatToPlot.Control80(:,:),1))'];
 plot_erp(A, EEG.srate, 3, {'Equal80', 'Control80'}, limits);
 
 subplot(3,1,3);
-A = [smooth(mean(SelectedMean.Equal20(:,:),1))';
-    smooth(mean(SelectedMean.Control20(:,:),1))'];
+A = [smooth(mean(WhatToPlot.Equal20(:,:),1))';
+    smooth(mean(WhatToPlot.Control20(:,:),1))'];
 plot_erp(A, EEG.srate, 3, {'Equal20', 'Control20'}, limits);
 
 % Plot mean of the three not-equal conditions in one graph 
-tmpB = [mean(SelectedMean.NotEqual100vs80(:,:),1);
-    mean(SelectedMean.NotEqual100vs20(:,:),1);
-    mean(SelectedMean.NotEqual80vs20(:,:),1);
-    mean(SelectedMean.Control100(:,:),1);
-    mean(SelectedMean.Control80(:,:),1);
-    mean(SelectedMean.Control20(:,:),1)];
+tmpB = [mean(WhatToPlot.NotEqual100vs80(:,:),1);
+    mean(WhatToPlot.NotEqual100vs20(:,:),1);
+    mean(WhatToPlot.NotEqual80vs20(:,:),1);
+    mean(WhatToPlot.Control100(:,:),1);
+    mean(WhatToPlot.Control80(:,:),1);
+    mean(WhatToPlot.Control20(:,:),1)];
 limits = 1.1*[min(min(tmpB)) max(max(tmpB))];
 clear tmpB
 
 figure;
 suptitle('not-equal conditions');
 subplot(3,1,1);
-A = smooth(mean(SelectedMean.NotEqual100vs80(:,:),1))';
+A = smooth(mean(WhatToPlot.NotEqual100vs80(:,:),1))';
 plot_erp(A, EEG.srate, 3, {'NotEqual100vs80'}, limits);
 
 subplot(3,1,2);
-A = smooth(mean(SelectedMean.NotEqual100vs20(:,:),1))';
+A = smooth(mean(WhatToPlot.NotEqual100vs20(:,:),1))';
 plot_erp(A, EEG.srate, 3, {'NotEqual100vs20'}, limits);
 
 subplot(3,1,3);
-A = smooth(mean(SelectedMean.NotEqual80vs20(:,:),1))';
+A = smooth(mean(WhatToPlot.NotEqual80vs20(:,:),1))';
 plot_erp(A, EEG.srate, 3, {'NotEqual80vs20'}, limits);
 
 
