@@ -34,51 +34,7 @@ Trig.E11 = {'57' '67' '75' '76' };
 
 for sub_idx = 1:length(subjects)
     disp(sprintf('Analysis of subject: %i -------------------', subjects(sub_idx)))
-    EEG = pop_loadset('filename',[num2str(subjects(sub_idx)) '.set'],'filepath', DirIn);
-    EEG = eeg_checkset( EEG );
 
-    % channels VEOG HEOG no needed anymore
-    EEG = pop_select( EEG,'nochannel',{'VEOG' 'HEOG'});
-    [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG,1,'overwrite', 'on','gui','off');
-    
-    eeglab redraw
-
-    % Load behavioural data to prepare a matrix with the event info
-    load([BehDirIn, num2str(subjects(sub_idx)), '/result/', num2str(subjects(sub_idx)), '_EEG_Reward_1.mat'])
-    A = ResponseArray;
-    load([BehDirIn, num2str(subjects(sub_idx)), '/result/', num2str(subjects(sub_idx)), '_EEG_Reward_2.mat'])
-    B = ResponseArray;
-    load([BehDirIn, num2str(subjects(sub_idx)), '/result/', num2str(subjects(sub_idx)),  '_EEG_Reward_3.mat'])
-    C = ResponseArray;
-    load([BehDirIn, num2str(subjects(sub_idx)), '/result/', num2str(subjects(sub_idx)), '_EEG_Reward_4.mat'])
-    D = ResponseArray;
-    BehavData = [A;B;C;D];
-
-
-    % Type info of each stimulus
-
-    index_boundary = strncmp('boundary', { EEG.event.type }, 10);
-    index_boundary = find(index_boundary==1); 
-    for b = 1:length(index_boundary)
-        EEG.event(1,index_boundary(b)).type = 0;
-    end
-    eeglab redraw
-
-    z = 1;
-    for iz = 1:length(EEG.event)
-        if  EEG.event(1,iz).type == '1'
-            EEG.event(1,iz).type =  str2double([num2str(BehavData(z,16)), ...
-                                                num2str(BehavData(z,17))]); 
-            z = z + 1;
-        elseif EEG.event(1,iz).type == '2'
-            EEG.event(1,iz).type = 2;
-        end
-    end
-    clear z index_boundary
-
-    % Dataset for each condition
-    EEG = pop_saveset( EEG, 'filename', ...
-        [num2str(subjects(sub_idx)), '.set'],'filepath', [DirOutEvents, '/']);
     for j= 1:length(ConditionName)
         field = ConditionName{j};
         if strmatch('Not',field)
