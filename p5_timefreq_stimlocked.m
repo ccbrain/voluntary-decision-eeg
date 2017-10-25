@@ -46,22 +46,25 @@ for sub_idx = 1:length(subjects)
         EEG = eeg_checkset( EEG );
         for nr_electrode = 1:length(EEG.chanlocs)
             fig = figure; 
-            [ersp itc powbase tm fq] = pop_newtimef( EEG, 1, nr_electrode, [-600  1996], [0] , ...
+            [ersp{nr_electrode} itc powbase tm fq] = pop_newtimef( EEG, 1, nr_electrode, [-500  800], [0] , ...
                 'topovec', 1, 'elocs', EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
                 'caption', [field ' electr:' EEG.chanlocs(nr_electrode).labels], ...
-                'baseline', [0], 'freqs', [0 50], 'plotitc' , 'off', 'plotphase', 'off', 'padratio', 1);
+                'baseline', [-500 -300], 'freqs', [0 75], ...
+                'plotitc' , 'off', 'plotphase', 'off', 'padratio', 1); %'plotersp', 'off',
             print(fig, [DirSpectFigs '/' field '/' [field '_' num2str(subjects(sub_idx)) '_' EEG.chanlocs(nr_electrode).labels]], '-dpng');
             close(fig);
             if nr_electrode == 1
-                erspGlobal = ersp;
+                erspGlobal = ersp{nr_electrode};
             else
-                erspGlobal = erspGlobal + ersp;
+                erspGlobal = erspGlobal + ersp{nr_electrode};
             end
+            spectrumFull.(field)(sub_idx, nr_electrode, :, :) = ersp{nr_electrode};
         end
         erspGlobal = erspGlobal / length(EEG.chanlocs);
         spectrumOverElectrodes.(field)(sub_idx, :, :) = erspGlobal;
     end
-
+    save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/spectrumStimLocked', ...
+        'spectrumFull', 'spectrumOverElectrodes', 'tm', 'fq')
 end
 
-clear ii iz j k ch
+clear nr_electrode sub_idx j field ersp
