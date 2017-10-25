@@ -83,10 +83,12 @@ for sub_idx = 1:length(subjects)
     for iz = 1:length(EEG.event)
         if EEG.event(1,iz).type == '2'
             EEG.event(1,iz).type =  str2double([num2str(2), num2str(BehavData(z,16)), ...
-                                                num2str(BehavData(z,17))]); 
+                                                num2str(BehavData(z,17))]);
+            EEG.event(1,iz).reactiontime = BehavData(z,9);
             z = z + 1;
         elseif EEG.event(1,iz).type == '1'
             EEG.event(1,iz).type = 1;
+            EEG.event(1,iz).reactiontime = 0;
         end
     end
     clear z index_boundary
