@@ -43,15 +43,17 @@ for sub_idx = 1:length(subjects)
                 field = ConditionName{j};
         EEG = pop_loadset('filename',[num2str(subjects(sub_idx)),'.set'],'filepath',[DirOutEvents, '/']);
         EEG = eeg_checkset( EEG );
-        EEG = pop_epoch( EEG,   Trig.(['E' num2str(j)]) , [-3 1], 'epochinfo', 'yes');
+        epoch_length = [-3 1];
+        EEG = pop_epoch( EEG,   Trig.(['E' num2str(j)]) , epoch_length, 'epochinfo', 'yes');
         EEG = eeg_checkset( EEG );
         
         for nr_electrode = 1:length(EEG.chanlocs)
             fig = figure; 
-            [ersp itc powbase tm fq] = pop_newtimef( EEG, 1, 1, [-3000   996], [0] , ...
+            [ersp itc powbase tm fq] = pop_newtimef( EEG, 1, nr_electrode, [-3000   996], [0] , ...
                 'topovec', 1, 'elocs', EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
                 'caption', [field ' electr:' EEG.chanlocs(nr_electrode).labels], ...
-                'baseline',[-600 -500], 'freqs', [0 50], 'plotitc' , 'off', 'plotphase', 'off', 'padratio', 1);
+                'baseline',[-600 -500], 'freqs', [0 75], 'plotitc' , 'off', ...
+                'plotphase', 'off', 'padratio', 1); %'plotersp', 'off',
             print(fig, [DirSpectFigs '/' field '/' [field '_' num2str(subjects(sub_idx)) '_' EEG.chanlocs(nr_electrode).labels]], '-dpng');
             close(fig);
             if nr_electrode == 1
@@ -59,11 +61,13 @@ for sub_idx = 1:length(subjects)
             else
                 erspGlobal = erspGlobal + ersp;
             end
+            spectrumFull.(field)(sub_idx, nr_electrode, :, :) = ersp;
         end
         erspGlobal = erspGlobal / length(EEG.chanlocs);
         spectrumOverElectrodes.(field)(sub_idx, :, :) = erspGlobal;
     end
-    save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/spectrumRespLocked', spectrumOverElectrodes, tm, fq)
+    save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/spectrumRespLocked', ...
+        'spectrumFull', 'spectrumOverElectrodes', 'tm', 'fq')
 end
 
-clear nr_electrode sub_idx j field
+clear nr_electrode sub_idx j field ersp
