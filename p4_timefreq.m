@@ -31,6 +31,7 @@ Trig.E11 = {'257' '267' '275' '276' };
 
 
 [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
+BASELINE_LENGTH = 0.3; %s
 
 for sub_idx = 1:length(subjects)
     disp(sprintf('Analysis of subject: %i -------------------', subjects(sub_idx)))
@@ -43,17 +44,38 @@ for sub_idx = 1:length(subjects)
                 field = ConditionName{j};
         EEG = pop_loadset('filename',[num2str(subjects(sub_idx)),'.set'],'filepath',[DirOutEvents, '/']);
         EEG = eeg_checkset( EEG );
-        epoch_length = [-3 1];
+        epoch_length = [-1 1];
         EEG = pop_epoch( EEG,   Trig.(['E' num2str(j)]) , epoch_length, 'epochinfo', 'yes');
         EEG = eeg_checkset( EEG );
         
         for nr_electrode = 1:length(EEG.chanlocs)
-            fig = figure; 
-            [ersp itc powbase tm fq] = pop_newtimef( EEG, 1, nr_electrode, [-3000   996], [0] , ...
-                'topovec', 1, 'elocs', EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
-                'caption', [field ' electr:' EEG.chanlocs(nr_electrode).labels], ...
-                'baseline',[-600 -500], 'freqs', [0 75], 'plotitc' , 'off', ...
-                'plotphase', 'off', 'padratio', 1); %'plotersp', 'off',
+%             [ersp itc powbase tm fq] = pop_newtimef( EEG, 1, nr_electrode, [-3000   996], [0] , ...
+%                 'topovec', 1, 'elocs', EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
+%                 'caption', [field ' electr:' EEG.chanlocs(nr_electrode).labels], ...
+%                 'baseline',[-600 -500], 'freqs', [0 75], 'plotitc' , 'off', ...
+%                 'plotphase', 'off', 'padratio', 1); %'plotersp', 'off',
+            for epoch_ix = 1:length(EEG.epoch)
+                [erspepoch fq tm] = specgram(EEG.data(nr_electrode,:,epoch_ix),round(EEG.srate/8),EEG.srate,[],20);
+                rt = EEG.epoch(1,epoch_ix).eventreactiontime{length(EEG.epoch(1,epoch_ix).eventreactiontime)};
+                if -rt < -1
+                    baseline_range = [-0.9 -0.6];
+                elseif -rt-BASELINE_LENGTH < -1
+                    baseline_range = [-0.9 -rt+0.2];
+                else
+                    baseline_range = [-rt-BASELINE_LENGTH -rt];
+                end
+                erspepoch = abs(erspepoch);
+                tm = tm + epoch_length(1);
+                erspepoch = remove_spect_baseline(tm, erspepoch, baseline_range, 'div');
+                if epoch_ix == 1
+                    ersp = erspepoch;
+                else
+                    ersp = ersp + erspepoch;
+                end
+            end
+            ersp = ersp / length(EEG.epoch);
+            ersp = 10*log10(ersp);
+            fig = plot_spectrogram(tm, fq, ersp, [field ' electr:' EEG.chanlocs(nr_electrode).labels],1);
             print(fig, [DirSpectFigs '/' field '/' [field '_' num2str(subjects(sub_idx)) '_' EEG.chanlocs(nr_electrode).labels]], '-dpng');
             close(fig);
             if nr_electrode == 1
@@ -62,10 +84,11 @@ for sub_idx = 1:length(subjects)
                 erspGlobal = erspGlobal + ersp;
             end
             spectrumFull.(field)(sub_idx, nr_electrode, :, :) = ersp;
-        end
+            end
         erspGlobal = erspGlobal / length(EEG.chanlocs);
         spectrumOverElectrodes.(field)(sub_idx, :, :) = erspGlobal;
     end
+
     save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/spectrumRespLocked', ...
         'spectrumFull', 'spectrumOverElectrodes', 'tm', 'fq')
 end

@@ -5,7 +5,7 @@ cleaning_flag = 0;
 % Frontal (Fz, Fp1, Fp2, F1 –F8)           - 1, 5:14
 % Central (Cz, C1-C6, T7, T8)              - 2, 15:22
 % Posterior (Pz, P1-P6, Oz, O1-O2, T5, T6) - 3, 4, 23:32
-selected_electrodes = [1 5:14];
+selected_electrodes = [1:32];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DirIn = '/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/AfterICA';
 BehDirIn = '/cubric/collab/ccbrain/data/Raw_Data and subjects/Behavioural_data/';
@@ -98,28 +98,32 @@ for sub_idx = 1:length(subjects)
         field = ConditionName{j};
         EEG = pop_loadset('filename',[num2str(subjects(sub_idx)),'.set'],'filepath',[DirOutEvents, '/']);
         EEG = eeg_checkset( EEG );
-        EEG = pop_epoch( EEG,   Trig.(['E' num2str(j)]) , [-0.6 2], 'epochinfo', 'yes');
+        epoch_length = [-0.4 1];
+        EEG = pop_epoch( EEG,   Trig.(['E' num2str(j)]) , epoch_length, 'epochinfo', 'yes');
         EEG = eeg_checkset( EEG );
-        EEG = pop_rmbase( EEG, [-600    -500]);
+        EEG = pop_rmbase( EEG, [-100    0]);
         EEG = eeg_checkset( EEG );
         EEG = pop_saveset( EEG, 'filename',[num2str(subjects(sub_idx)), '_', field, '.set'],'filepath', [DirOutEpochs,'/']);
+        FullData.(field).(['u' num2str(subjects(sub_idx))])(:,:,:) = EEG.data;
         Mean.(field) = mean(EEG.data,3);
         GlobalMean.(field)(sub_idx,:) = mean(Mean.(field),1);
         SelectedMean.(field)(sub_idx,:) = mean(Mean.(field)(selected_electrodes, :),1);
+        WithElectrodesMean.(field)(sub_idx,:,:) = Mean.(field);
         GlobalVar.(field)(sub_idx,:) = var(Mean.(field));
+        GlobalStd.(field)(sub_idx,:) = std(Mean.(field), 1);
     end
 
 end
 
 clear ii iz j k ch
 
-save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedData.mat', ...
-    'subjects', 'GlobalMean','GlobalVar'); 
+save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedDataStim.mat', ...
+    'subjects', 'epoch_length','GlobalMean', 'FullData', 'WithElectrodesMean');
 
 %% Figures
 
-WhatToPlot = SelectedMean;
-
+WhatToPlot = GlobalMean;
+tttt = -epoch_length(1);
 % Plot mean of the three equal conditions in one graph 
 tmpA = [mean(WhatToPlot.Equal100(:,:),1);
     mean(WhatToPlot.Equal80(:,:),1);
@@ -136,17 +140,17 @@ suptitle('equal conditions (stim-locked)');
 subplot(3,1,1);
 A = [smooth(mean(WhatToPlot.Equal100(:,:),1))';
     smooth(mean(WhatToPlot.Control100(:,:),1))'];
-plot_erp(A, EEG.srate, 0.6, {'Equal100', 'Control100'}, limits);
+plot_erp(A, EEG.srate, tttt, {'Equal100', 'Control100'}, limits);
 
 subplot(3,1,2);
 A = [smooth(mean(WhatToPlot.Equal80(:,:),1))';
     smooth(mean(WhatToPlot.Control80(:,:),1))'];
-plot_erp(A, EEG.srate, 0.6, {'Equal80', 'Control80'}, limits);
+plot_erp(A, EEG.srate, tttt, {'Equal80', 'Control80'}, limits);
 
 subplot(3,1,3);
 A = [smooth(mean(WhatToPlot.Equal20(:,:),1))';
     smooth(mean(WhatToPlot.Control20(:,:),1))'];
-plot_erp(A, EEG.srate, 0.6, {'Equal20', 'Control20'}, limits);
+plot_erp(A, EEG.srate, tttt, {'Equal20', 'Control20'}, limits);
 
 % Plot mean of the three not-equal conditions in one graph 
 tmpB = [mean(WhatToPlot.NotEqual100vs80(:,:),1);
@@ -162,15 +166,15 @@ figure;
 suptitle('not-equal conditions (stim-locked)');
 subplot(3,1,1);
 A = smooth(mean(WhatToPlot.NotEqual100vs80(:,:),1))';
-plot_erp(A, EEG.srate, 0.6, {'NotEqual100vs80'}, limits);
+plot_erp(A, EEG.srate, tttt, {'NotEqual100vs80'}, limits);
 
 subplot(3,1,2);
 A = smooth(mean(WhatToPlot.NotEqual100vs20(:,:),1))';
-plot_erp(A, EEG.srate, 0.6, {'NotEqual100vs20'}, limits);
+plot_erp(A, EEG.srate, tttt, {'NotEqual100vs20'}, limits);
 
 subplot(3,1,3);
 A = smooth(mean(WhatToPlot.NotEqual80vs20(:,:),1))';
-plot_erp(A, EEG.srate, 0.6, {'NotEqual80vs20'}, limits);
+plot_erp(A, EEG.srate, tttt, {'NotEqual80vs20'}, limits);
 
 
 % Plot global field power (GFP) of the three equal conditions in one graph 
@@ -188,14 +192,43 @@ suptitle('GFP of the three equal conditions (stim-locked)')
 subplot(3,1,1);
 A = [mean(sqrt(GlobalVar.Equal100(:,:)),1);
     mean(sqrt(GlobalVar.Control100(:,:)),1)];
-plot_erp(A, EEG.srate, 0.6, {'Equal100', 'Control100'}, limits, 0);
+plot_erp(A, EEG.srate, tttt, {'Equal100', 'Control100'}, limits, 0);
 
 subplot(3,1,2);
 A = [mean(sqrt(GlobalVar.Equal80(:,:)),1);
     mean(sqrt(GlobalVar.Control80(:,:)),1)];
-plot_erp(A, EEG.srate, 0.6, {'Equal80', 'Control80'}, limits, 0);
+plot_erp(A, EEG.srate, tttt, {'Equal80', 'Control80'}, limits, 0);
 
 subplot(3,1,3);
 A = [mean(sqrt(GlobalVar.Equal20(:,:)),1);
     mean(sqrt(GlobalVar.Control20(:,:)),1)];
-plot_erp(A, EEG.srate, 0.6, {'Equal20', 'Control20'}, limits , 0);
+plot_erp(A, EEG.srate, tttt, {'Equal20', 'Control20'}, limits , 0);
+
+%% Triplots
+A = [mean(WhatToPlot.Equal100(:,:),1);
+    mean(WhatToPlot.Equal80(:,:),1);
+    mean(WhatToPlot.Equal20(:,:),1)];
+C= [mean(GlobalStd.Equal100(:,:),1);
+    mean(GlobalStd.Equal80(:,:),1);
+    mean(GlobalStd.Equal20(:,:),1)];
+C = C./sqrt(size(GlobalStd.Equal20,1));
+limits = 1.7*[min(min(A))-0.5 max(max(A))];
+
+
+figure
+hold on
+h1 = plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(1,:)), 'Color', 'b', 'LineWidth', 1.2);
+plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(1,:))+0.5*squeeze(C(1,:)), '--', 'Color', 'b');
+plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(1,:))-0.5*squeeze(C(1,:)), '--', 'Color', 'b');
+h2 = plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(2,:)), 'Color', 'r', 'LineWidth', 1.2);
+plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(2,:))+0.5*squeeze(C(2,:)), '--', 'Color', 'r');
+plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(2,:))-0.5*squeeze(C(2,:)), '--', 'Color', 'r');
+h3 = plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(3,:)), 'Color', 'g', 'LineWidth', 1.2);
+plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(3,:))+0.5*squeeze(C(3,:)), '--', 'Color', 'g');
+plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(3,:))-0.5*squeeze(C(3,:)), '--', 'Color', 'g');
+set(gca,'Ydir','reverse')
+xlabel('time')
+ylim(limits)
+legend([h1 h2 h3], {'Eq100', 'Eq80', 'Eq20'}, 'Location', 'sw')
+hold off
+xlabel('time')

@@ -43,7 +43,7 @@ end
 %%
 for cond = 1: length(cond_fields)
     condition = cond_fields{cond};
-    brain_region = 'all';
+    brain_region = 'central';
     selected_electrodes = electrodes.(brain_region);
 
     spctr = squeeze(mean(spectrumFull.(condition)(:, selected_electrodes, : ,:), 2));
