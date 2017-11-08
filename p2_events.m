@@ -5,7 +5,7 @@ cleaning_flag = 0;
 % Frontal (Fz, Fp1, Fp2, F1 –F8)           - 1, 5:14
 % Central (Cz, C1-C6, T7, T8)              - 2, 15:22
 % Posterior (Pz, P1-P6, Oz, O1-O2, T5, T6) - 3, 4, 23:32
-selected_electrodes = 1:32;
+selected_electrodes = [2, 15:22];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DirIn = '/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/AfterICA';
 BehDirIn = '/cubric/collab/ccbrain/data/Raw_Data and subjects/Behavioural_data/';
@@ -164,7 +164,18 @@ save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedDataR
     'subjects', 'epoch_length','GlobalMean', 'FullData', 'WithElectrodesMean');
 %% Figures
 
-WhatToPlot = SelectedMean;
+% use that only when you load data from file:
+% for sub_idx = 1:length(subjects)
+%     for j= 1:length(ConditionName)
+%         field = ConditionName{j};
+%         Mean.(field) = mean(FullData.(field).(['u' num2str(subjects(sub_idx))])(:,:,:),3);
+%         GlobalMean.(field)(sub_idx,:) = mean(Mean.(field),1);
+%         SelectedMean.(field)(sub_idx,:) = mean(Mean.(field)(selected_electrodes, :),1);
+%         GlobalStd.(field)(sub_idx,:) = std(Mean.(field), 1);
+%     end
+% end
+
+WhatToPlot = GlobalMean;
 tttt = -epoch_length(1) ;
 % Plot mean of the three equal conditions in one graph 
 tmpA = [mean(WhatToPlot.Equal100(:,:),1);

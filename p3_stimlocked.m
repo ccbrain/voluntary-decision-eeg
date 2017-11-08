@@ -122,6 +122,16 @@ save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedDataS
 
 %% Figures
 
+for sub_idx = 1:length(subjects)
+    for j= 1:length(ConditionName)
+        field = ConditionName{j};
+        Mean.(field) = mean(FullData.(field).(['u' num2str(subjects(sub_idx))])(:,:,:),3);
+        GlobalMean.(field)(sub_idx,:) = mean(Mean.(field),1);
+        SelectedMean.(field)(sub_idx,:) = mean(Mean.(field)(selected_electrodes, :),1);
+        GlobalStd.(field)(sub_idx,:) = std(Mean.(field), 1);
+    end
+end
+
 WhatToPlot = GlobalMean;
 tttt = -epoch_length(1);
 % Plot mean of the three equal conditions in one graph 
