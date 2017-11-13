@@ -44,6 +44,12 @@ cfg_clf.repeat     = 8;
 cfg_clf.metric     = 'acc';
 cfg_clf.balance    = 'undersample';
 
+
+%%%%%%%%%%%%%%%% Hyperparams
+smoothing_window = 0.05; % sec
+n_comp           = 6;
+%%%%%%%%%%%%%%%
+
 %% Loop with model training among the subjects
 for sub_idx = 1 : length(subjects) %sub_idx = 1;
 subject_code = ['u' num2str(subjects(sub_idx))];
@@ -54,6 +60,8 @@ tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
 edata.compare100 = double([tmpA; tmpB]);
+edata.compare100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.compare100, 3);
+% hold on; plot(squeeze(edata.compare100(2,4,:))); plot(squeeze(xw(2,4,:))); hold off;
 labels.compare100= ones(1, size(edata.compare100,1));
 labels.compare100(size(tmpA,1):size(edata.compare100,1)) = 2;
 
@@ -62,6 +70,7 @@ tmpB = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
 edata.compare80 = double([tmpA; tmpB]);
+edata.compare80 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.compare80, 3);
 labels.compare80= ones(1, size(edata.compare80,1));
 labels.compare80(size(tmpA,1):size(edata.compare80,1)) = 2;
 
@@ -70,6 +79,7 @@ tmpB = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
 edata.compare20 = double([tmpA; tmpB]);
+edata.compare20 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.compare20, 3);
 labels.compare20= ones(1, size(edata.compare20,1));
 labels.compare20(size(tmpA,1):size(edata.compare20,1)) = 2;
 
@@ -78,6 +88,7 @@ tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
 edata.compare80100 = double([tmpA; tmpB]);
+edata.compare80100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.compare80100, 3);
 labels.compare80100 = ones(1, size(edata.compare80100,1));
 labels.compare80100(size(tmpA,1):size(edata.compare80100,1)) = 2;
 
@@ -86,6 +97,7 @@ tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
 edata.compare20100 = double([tmpA; tmpB]);
+edata.compare20100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.compare20100, 3);
 labels.compare20100 = ones(1, size(edata.compare20100,1));
 labels.compare20100(size(tmpA,1):size(edata.compare20100,1)) = 2;
 
@@ -94,23 +106,30 @@ tmpB = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
 edata.compare2080 = double([tmpA; tmpB]);
+edata.compare2080 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.compare2080, 3);
 labels.compare2080 = ones(1, size(edata.compare2080,1));
 labels.compare2080(size(tmpA,1):size(edata.compare2080,1)) = 2;
 
-[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, edata.compare100, labels.compare100);
+Xdat = reduceInAllTimepoints(edata.compare100, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare100);
 all_auc.compare100(sub_idx, :) = auc_clf;
-[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, edata.compare80, labels.compare80);
+Xdat = reduceInAllTimepoints(edata.compare80, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare80);
 all_auc.compare80(sub_idx, :) = auc_clf;
-[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, edata.compare20, labels.compare20);
+Xdat = reduceInAllTimepoints(edata.compare20, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare20);
 all_auc.compare20(sub_idx, :) = auc_clf;
-[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, edata.compare80100, labels.compare80100);
+Xdat = reduceInAllTimepoints(edata.compare80100, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare80100);
 all_auc.compare80100(sub_idx, :) = auc_clf;
-[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, edata.compare20100, labels.compare20100);
+Xdat = reduceInAllTimepoints(edata.compare20100, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare20100);
 all_auc.compare20100(sub_idx, :) = auc_clf;
-[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, edata.compare2080, labels.compare2080);
+Xdat = reduceInAllTimepoints(edata.compare2080, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare2080);
 all_auc.compare2080(sub_idx, :) = auc_clf;
 end
-save(['Data/ml_timeseries_2nd_trial_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg_clf')
+save(['Data/ml_timeseries_2nd_gauss_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg_clf')
 
 %%
 % Plotting the resuts

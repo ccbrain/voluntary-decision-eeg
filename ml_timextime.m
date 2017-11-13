@@ -98,6 +98,7 @@ end
 save(['Data/ml_timextime_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg_clf')
 
 %%
+load(['Data/ml_timextime_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg_clf')
 figure
 cfg_plot= [];
 cfg_plot.x   = timex;
