@@ -23,7 +23,7 @@ cfg_clf = mv_get_classifier_param('lda');
 
 %%%%%%%%%%%%%%%% Hyperparams
 smoothing_window = 0.02; % sec
-timestamps       = [0.1 0.15 0.2 0.25 0.3 0.35];
+timestamps       = [0.35];%[0.1 0.15 0.2 0.25 0.3 0.35];
 %%%%%%%%%%%%%%%
 
 %% Loop with model training among the subjects
@@ -59,7 +59,7 @@ edata.compare20 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window),
 labels.compare20= ones(1, size(edata.compare20,1));
 labels.compare20(size(tmpA,1):size(edata.compare20,1)) = 2;
 
-tmpA = permute(FullData.Control80.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
@@ -68,7 +68,7 @@ edata.compare80100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_windo
 labels.compare80100 = ones(1, size(edata.compare80100,1));
 labels.compare80100(size(tmpA,1):size(edata.compare80100,1)) = 2;
 
-tmpA = permute(FullData.Control20.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
@@ -77,7 +77,7 @@ edata.compare20100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_windo
 labels.compare20100 = ones(1, size(edata.compare20100,1));
 labels.compare20100(size(tmpA,1):size(edata.compare20100,1)) = 2;
 
-tmpA = permute(FullData.Control20.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
@@ -166,7 +166,6 @@ save(['Data/ml_feature_importance_lda'], 'all_weights', 'timex', 'cfg_clf')
 
 %%
 % Plotting the resuts
-headplot
 load('Data/chanlocs');
 figure;
 topoplot(mean(all_weights.compare100,1), chanlocs32)

@@ -44,7 +44,6 @@ cfg_clf.repeat     = 8;
 cfg_clf.metric     = 'acc';
 cfg_clf.balance    = 'undersample';
 
-
 %%%%%%%%%%%%%%%% Hyperparams
 smoothing_window = 0.05; % sec
 n_comp           = 6;
@@ -83,7 +82,7 @@ edata.compare20 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window),
 labels.compare20= ones(1, size(edata.compare20,1));
 labels.compare20(size(tmpA,1):size(edata.compare20,1)) = 2;
 
-tmpA = permute(FullData.Control80.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
@@ -92,7 +91,7 @@ edata.compare80100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_windo
 labels.compare80100 = ones(1, size(edata.compare80100,1));
 labels.compare80100(size(tmpA,1):size(edata.compare80100,1)) = 2;
 
-tmpA = permute(FullData.Control20.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
@@ -101,7 +100,7 @@ edata.compare20100 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_windo
 labels.compare20100 = ones(1, size(edata.compare20100,1));
 labels.compare20100(size(tmpA,1):size(edata.compare20100,1)) = 2;
 
-tmpA = permute(FullData.Control20.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpA = addEvery2ndRows(tmpA);
 tmpB = addEvery2ndRows(tmpB);
@@ -133,7 +132,7 @@ save(['Data/ml_timeseries_2nd_gauss_results_' cfg_clf.classifier], 'all_auc', 't
 
 %%
 % Plotting the resuts
-load(['Data/ml_timeseries_2nd_trial_results_' cfg_clf.classifier])
+load(['Data/ml_timeseries_2nd_gauss_results_' cfg_clf.classifier])
 y_limits = [0.4 0.65];
 figure;
 subplot(131);

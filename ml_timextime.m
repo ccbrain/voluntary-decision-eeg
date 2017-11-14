@@ -64,19 +64,19 @@ edata.compare20 = double([tmpA; tmpB]);
 labels.compare20= ones(1, size(edata.compare20,1));
 labels.compare20(size(tmpA,1):size(edata.compare20,1)) = 2;
 
-tmpA = permute(FullData.Control80.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal80.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 edata.compare80100 = double([tmpA; tmpB]);
 labels.compare80100 = ones(1, size(edata.compare80100,1));
 labels.compare80100(size(tmpA,1):size(edata.compare80100,1)) = 2;
 
-tmpA = permute(FullData.Control20.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal100.(subject_code),[3 1 2]);
 edata.compare20100 = double([tmpA; tmpB]);
 labels.compare20100 = ones(1, size(edata.compare20100,1));
 labels.compare20100(size(tmpA,1):size(edata.compare20100,1)) = 2;
 
-tmpA = permute(FullData.Control20.(subject_code),[3 1 2]);
+tmpA = permute(FullData.Equal20.(subject_code),[3 1 2]);
 tmpB = permute(FullData.Equal80.(subject_code),[3 1 2]);
 edata.compare2080 = double([tmpA; tmpB]);
 labels.compare2080 = ones(1, size(edata.compare2080,1));

@@ -55,6 +55,9 @@ for sub_idx = 1:length(subjects)
 %                 'baseline',[-600 -500], 'freqs', [0 75], 'plotitc' , 'off', ...
 %                 'plotphase', 'off', 'padratio', 1); %'plotersp', 'off',
             for epoch_ix = 1:length(EEG.epoch)
+                fq = [1:2:16 20 32 40 50 64];
+                %erspepoch = cwt(squeeze(EEG.data(nr_electrode,:,epoch_ix)), fq,'morl');
+                %tm = (1:size(erspepoch,2))/EEG.srate;
                 [erspepoch fq tm] = specgram(EEG.data(nr_electrode,:,epoch_ix),round(EEG.srate/8),EEG.srate,[],20);
                 rt = EEG.epoch(1,epoch_ix).eventreactiontime{length(EEG.epoch(1,epoch_ix).eventreactiontime)};
                 if -rt < -1
