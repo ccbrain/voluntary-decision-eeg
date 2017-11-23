@@ -41,15 +41,15 @@ end
 
 
 %%
+brain_region = 'all';
 for cond = 1: length(cond_fields)
     condition = cond_fields{cond};
-    brain_region = 'central';
     selected_electrodes = electrodes.(brain_region);
 
     spctr = squeeze(mean(spectrumFull.(condition)(:, selected_electrodes, : ,:), 2));
     spctr = squeeze(mean(spctr,1));
     fig = plot_spectrogram( tm, fq, spctr,...
-             sprintf('GrandAvg %s region: %s', condition, brain_region));
+             sprintf('GrandAvg %s region: %s', condition, brain_region), 0, [-1.5 1.5]);
 
     print(fig, ['/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/figs/spectrograms/' ...
         how_locked '/' sprintf('grandAvg_%s_%s', condition, brain_region)], '-dpng');

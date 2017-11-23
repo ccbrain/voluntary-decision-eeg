@@ -58,7 +58,14 @@ for sub_idx = 1:length(subjects)
                 fq = [1:2:16 20 32 40 50 64];
                 %erspepoch = cwt(squeeze(EEG.data(nr_electrode,:,epoch_ix)), fq,'morl');
                 %tm = (1:size(erspepoch,2))/EEG.srate;
-                [erspepoch fq tm] = specgram(EEG.data(nr_electrode,:,epoch_ix),round(EEG.srate/8),EEG.srate,[],20);
+                EEGcp = EEG;
+                EEGcp.data =  EEG.data(:,:,epoch_ix);
+                [erspepoch itc powbase tm fq]  = pop_newtimef( EEGcp, 1, 1, [-1000   996], [3  0.5] , 'freqs', [0 75], ...
+                    'topovec', 1, 'elocs', EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
+                    'baseline',[NaN], 'plotitc' , 'off', 'plotphase', 'off', 'scale', 'abs',...
+                    'plotersp', 'off','padratio', 1, 'winsize', 250);
+                tm = tm /EEG.srate; % from ms to sec
+                %[erspepoch fq tm] = specgram(EEG.data(nr_electrode,:,epoch_ix),round(EEG.srate/8),EEG.srate,[],20);
                 rt = EEG.epoch(1,epoch_ix).eventreactiontime{length(EEG.epoch(1,epoch_ix).eventreactiontime)};
                 if -rt < -1
                     baseline_range = [-0.9 -0.6];
@@ -68,7 +75,7 @@ for sub_idx = 1:length(subjects)
                     baseline_range = [-rt-BASELINE_LENGTH -rt];
                 end
                 erspepoch = abs(erspepoch);
-                tm = tm + epoch_length(1);
+                %tm = tm + epoch_length(1);
                 erspepoch = remove_spect_baseline(tm, erspepoch, baseline_range, 'div');
                 if epoch_ix == 1
                     ersp = erspepoch;

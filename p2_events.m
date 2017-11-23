@@ -45,7 +45,7 @@ for sub_idx = 1:length(subjects)
     EEG = pop_select( EEG,'nochannel',{'VEOG' 'HEOG'});
     [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG,1,'overwrite', 'on','gui','off');
     
-    EEG = pop_eegfiltnew(EEG, 35,1,826,0,[],0);
+    EEG = pop_eegfiltnew(EEG, 75,1,826,0,[],0);
     [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG,1,'overwrite','on','gui','off'); 
     EEG = eeg_checkset( EEG );
     eeglab redraw
