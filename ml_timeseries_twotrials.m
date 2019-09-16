@@ -36,7 +36,7 @@ cfg_libSVM.classifier = 'libsvm';
 cfg_libSVM.C          = 0.1;%[0.01 0.1 0.5];
 cfg_libSVM.kernel_type = 0; % 0 linear, 2 rbf
 %%%%%%%%%%%%%%%%%%%%%%%%%%Pick classifier
-cfg_clf = cfg_libSVM;
+cfg_clf = cfg_LDA;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 cfg_clf.CV         = 'kfold';
 cfg_clf.K          = 5;
@@ -109,15 +109,15 @@ edata.compare2080 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window
 labels.compare2080 = ones(1, size(edata.compare2080,1));
 labels.compare2080(size(tmpA,1):size(edata.compare2080,1)) = 2;
 
-% Xdat = reduceInAllTimepoints(edata.compare100, n_comp);
-% [auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare100);
-% all_auc.compare100(sub_idx, :) = auc_clf;
-% Xdat = reduceInAllTimepoints(edata.compare80, n_comp);
-% [auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare80);
-% all_auc.compare80(sub_idx, :) = auc_clf;
-% Xdat = reduceInAllTimepoints(edata.compare20, n_comp);
-% [auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare20);
-% all_auc.compare20(sub_idx, :) = auc_clf;
+Xdat = reduceInAllTimepoints(edata.compare100, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare100);
+all_auc.compare100(sub_idx, :) = auc_clf;
+Xdat = reduceInAllTimepoints(edata.compare80, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare80);
+all_auc.compare80(sub_idx, :) = auc_clf;
+Xdat = reduceInAllTimepoints(edata.compare20, n_comp);
+[auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare20);
+all_auc.compare20(sub_idx, :) = auc_clf;
 Xdat = reduceInAllTimepoints(edata.compare80100, n_comp);
 [auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare80100);
 all_auc.compare80100(sub_idx, :) = auc_clf;
@@ -127,6 +127,7 @@ all_auc.compare20100(sub_idx, :) = auc_clf;
 Xdat = reduceInAllTimepoints(edata.compare2080, n_comp);
 [auc_clf, result_clf] = mv_classify_across_time(cfg_clf, Xdat, labels.compare2080);
 all_auc.compare2080(sub_idx, :) = auc_clf;
+
 end
 %save(['Data/ml_timeseries_2nd_gauss_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg_clf')
 
@@ -134,7 +135,7 @@ end
 % Plotting the resuts
 % resp lcoked: ['Data/ml_timeseries_resp_2nd_gauss_results_' cfg_clf.classifier]
 %load(['Data/ml_timeseries_2nd_gauss_results_' cfg_clf.classifier])
-y_limits = [0.4 0.7];
+y_limits = [0.4 0.65];
 figure;
 subplot(131);
 accPlot(timex, all_auc.compare100)

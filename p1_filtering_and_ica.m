@@ -1,14 +1,15 @@
 % Script for filtering the data and ICA channels removal done manually
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-clear all
+%clear all
 DirIn = '/cubric/collab/ccbrain/data';                      % Path of where the data is stored (with raw data)
 DirOut = '/cubric/collab/ccbrain/data/Prepro_250Hz';        % Path of where preprocessed data will be saved 
+DirAfterIca = '/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/AfterICA025';
 subject = [1000,1001,1003:1014,1016:1022]; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Pick number of subject here:
-i = 15;
+%i = 15;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [ALLEEG EEG CURRENTSET ALLCOM] = eeglab;
 
@@ -39,7 +40,7 @@ EEG = eeg_checkset( EEG );
 
 % filtering
 % 0.5-100
-EEG = pop_eegfiltnew(EEG, 0.5, 100, 12000, 0,[],0);
+EEG = pop_eegfiltnew(EEG, 0.25, 100, 38000, 0,[],0);
 % notch filter 58-62
 EEG = pop_eegfiltnew(EEG, 48, 52, 12000, 1,[],0);
 
@@ -81,3 +82,9 @@ title('HEOG')
 [value_HEOG,xHEOG] = sort(abs(RHO_HEOG),2, 'descend');
 [value_VEOG,xVEOG] = sort(abs(RHO_VEOG),2, 'descend');
 
+OEEG = pop_subcomp(EEG, unique([xHEOG(1:3) xVEOG(1:3)]));
+OEEG = eeg_checkset( OEEG );
+pop_saveset( OEEG, 'filename',[num2str(subject(i)), '.set'],...
+    'filepath', [DirAfterIca, '/']);
+close all
+clear EEG OEEG xHEOG xVEOG RHO_HEOG RHO_VEOG

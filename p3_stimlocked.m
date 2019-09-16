@@ -5,7 +5,7 @@ cleaning_flag = 0;
 % Frontal (Fz, Fp1, Fp2, F1 –F8)           - 1, 5:14
 % Central (Cz, C1-C6, T7, T8)              - 2, 15:22
 % Posterior (Pz, P1-P6, Oz, O1-O2, T5, T6) - 3, 4, 23:32
-selected_electrodes = [1:32];
+selected_electrodes = [23 24 3];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DirIn = '/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/AfterICA';
 BehDirIn = '/cubric/collab/ccbrain/data/Raw_Data and subjects/Behavioural_data/';
@@ -45,7 +45,7 @@ for sub_idx = 1:length(subjects)
     EEG = pop_select( EEG,'nochannel',{'VEOG' 'HEOG'});
     [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG,1,'overwrite', 'on','gui','off');
     
-    EEG = pop_eegfiltnew(EEG, 35,1,826,0,[],0);
+    EEG = pop_eegfiltnew(EEG, 0,30,826,0,[],0);
     [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG,1,'overwrite','on','gui','off'); 
     EEG = eeg_checkset( EEG );
     eeglab redraw
@@ -68,7 +68,13 @@ for sub_idx = 1:length(subjects)
     load([BehDirIn, num2str(subjects(sub_idx)), '/result/', num2str(subjects(sub_idx)), '_EEG_Reward_4.mat'])
     D = ResponseArray;
     BehavData = [A;B;C;D];
-
+    
+    % Another subj code
+    sec_subj_code = (str2num(subj)-1000 )+1;
+    fprefpath = ['/cubric/collab/ccbrain/data/Raw_Data and subjects/Prefered/preferred_acc_' num2str(sec_subj_code) '.csv'];
+    % Expected format: reaction time, ACC, Trial nr
+    prefered_vals = csvread(fprefpath);
+    
 
     % Type info of each stimulus
 
@@ -80,10 +86,23 @@ for sub_idx = 1:length(subjects)
     eeglab redraw
 
     z = 1;
+    preferidxvect = [];
+    notpreferidxvect = [];
     for iz = 1:length(EEG.event)
         if  EEG.event(1,iz).type == '1'
             EEG.event(1,iz).type =  str2double([num2str(BehavData(z,16)), ...
                                                 num2str(BehavData(z,17))]); 
+            pref_idx = find(prefered_vals(:,3)==z);
+            if ~isempty(pref_idx)
+                EEG.event(1,iz).pref = prefered_vals(pref_idx,2);
+                if prefered_vals(pref_idx,2)
+                    preferidxvect = [preferidxvect iz];
+                else
+                    notpreferidxvect = [notpreferidxvect iz];
+                end
+            else
+                EEG.event(1,iz).pref = [];
+            end
             z = z + 1;
         elseif EEG.event(1,iz).type == '2'
             EEG.event(1,iz).type = 2;
@@ -94,11 +113,12 @@ for sub_idx = 1:length(subjects)
     % Dataset for each condition
     EEG = pop_saveset( EEG, 'filename', ...
         [num2str(subjects(sub_idx)), '.set'],'filepath', [DirOutEvents, '/']);
+    % Trial length ---------------------------
+    epoch_length = [-0.4 1];
     for j= 1:length(ConditionName)
         field = ConditionName{j};
         EEG = pop_loadset('filename',[num2str(subjects(sub_idx)),'.set'],'filepath',[DirOutEvents, '/']);
         EEG = eeg_checkset( EEG );
-        epoch_length = [-0.4 1];
         EEG = pop_epoch( EEG,   Trig.(['E' num2str(j)]) , epoch_length, 'epochinfo', 'yes');
         EEG = eeg_checkset( EEG );
         EEG = pop_rmbase( EEG, [-100    0]);
@@ -112,15 +132,41 @@ for sub_idx = 1:length(subjects)
         GlobalVar.(field)(sub_idx,:) = var(Mean.(field));
         GlobalStd.(field)(sub_idx,:) = std(Mean.(field), 1);
     end
-
+    
+    % preferred:
+    EEG = pop_loadset('filename',[num2str(subjects(sub_idx)),'.set'],'filepath',[DirOutEvents, '/']);
+    for pi=preferidxvect
+        EEG.event(1,pi).type = 'p';
+    end
+    EEG = eeg_checkset( EEG );
+    EEG = pop_epoch( EEG,   {'p'} , epoch_length, 'epochinfo', 'yes');
+    EEG = eeg_checkset( EEG );
+    EEG = pop_rmbase( EEG, [-100    0]);
+    EEG = eeg_checkset( EEG );
+    EEG = pop_saveset( EEG, 'filename',[num2str(subjects(sub_idx)), '_pref', '.set'],'filepath', [DirOutEpochs,'/']);
+    FullData.('pref').(['u' num2str(subjects(sub_idx))])(:,:,:) = EEG.data;
+    % not-preferred:
+    EEG = pop_loadset('filename',[num2str(subjects(sub_idx)),'.set'],'filepath',[DirOutEvents, '/']);
+    for pi=notpreferidxvect
+        EEG.event(1,pi).type = 'n';
+    end
+    EEG = eeg_checkset( EEG );
+    EEG = pop_epoch( EEG,   {'n'} , epoch_length, 'epochinfo', 'yes');
+    EEG = eeg_checkset( EEG );
+    EEG = pop_rmbase( EEG, [-100    0]);
+    EEG = eeg_checkset( EEG );
+    EEG = pop_saveset( EEG, 'filename',[num2str(subjects(sub_idx)), '_notpref', '.set'],'filepath', [DirOutEpochs,'/']);
+    FullData.('notpref').(['u' num2str(subjects(sub_idx))])(:,:,:) = EEG.data;
 end
 
 clear ii iz j k ch
 
-save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedDataStim.mat', ...
+save('/cubric/collab/ccbrain/data/Scripts/eeg_analysis2/Data/GlobalAveragedDataStim', ...
     'subjects', 'epoch_length','GlobalMean', 'FullData', 'WithElectrodesMean');
 
 %% Figures
+
+EEG.srate = 250;
 
 for sub_idx = 1:length(subjects)
     for j= 1:length(ConditionName)
@@ -146,7 +192,7 @@ limits = 1.1*[min(min(tmpA)) max(max(tmpA))];
 clear tmpA
 
 figure;
-suptitle('equal conditions (stim-locked)');
+title('equal conditions (stim-locked)');
 subplot(3,1,1);
 A = [smooth(mean(WhatToPlot.Equal100(:,:),1))';
     smooth(mean(WhatToPlot.Control100(:,:),1))'];
@@ -173,7 +219,7 @@ limits = 1.1*[min(min(tmpB)) max(max(tmpB))];
 clear tmpB
 
 figure;
-suptitle('not-equal conditions (stim-locked)');
+%suptitle('not-equal conditions (stim-locked)');
 subplot(3,1,1);
 A = smooth(mean(WhatToPlot.NotEqual100vs80(:,:),1))';
 plot_erp(A, EEG.srate, tttt, {'NotEqual100vs80'}, limits);
@@ -198,7 +244,7 @@ limits = 1.1*[min(min(tmpC)) max(max(tmpC))];
 clear tmpC
 
 figure;
-suptitle('GFP of the three equal conditions (stim-locked)')
+title('GFP of the three equal conditions (stim-locked)')
 subplot(3,1,1);
 A = [mean(sqrt(GlobalVar.Equal100(:,:)),1);
     mean(sqrt(GlobalVar.Control100(:,:)),1)];
@@ -239,6 +285,32 @@ plot((1:size(A,2))/EEG.srate - tttt, squeeze(A(3,:))-0.5*squeeze(C(3,:)), '--', 
 set(gca,'Ydir','reverse')
 xlabel('time')
 ylim(limits)
-legend([h1 h2 h3], {'Eq100', 'Eq80', 'Eq20'}, 'Location', 'sw')
+legend([h1 h2 h3], {'Equal100', 'Equal80', 'Equal20'}, 'Location', 'se')
 hold off
 xlabel('time')
+xlim([-0.1 0.8])
+
+%% Pref vs Notpref ERPs
+Pref_Mat = [];
+NotPref_Mat = [];
+
+for sub_idx = 1:length(subjects)
+    Pref_Mat = [Pref_Mat; squeeze(mean(mean(FullData.pref.(['u' num2str(subjects(sub_idx))]),1),3))];
+    NotPref_Mat = [NotPref_Mat; squeeze(mean(mean(FullData.notpref.(['u' num2str(subjects(sub_idx))]),1),3))];
+end
+
+figure
+hold on
+h1 = plot((1:size(Pref_Mat,2))/EEG.srate - tttt, squeeze(mean(Pref_Mat,1)), 'Color', [101 66 244]/256, 'LineWidth', 1.2);
+plot((1:size(Pref_Mat,2))/EEG.srate - tttt, squeeze(mean(Pref_Mat,1))+0.5*squeeze(std(Pref_Mat,1)), '--', 'Color', [101 66 244]/256);
+plot((1:size(Pref_Mat,2))/EEG.srate - tttt, squeeze(mean(Pref_Mat,1))-0.5*squeeze(std(Pref_Mat,1)), '--', 'Color', [101 66 244]/256);
+h2 = plot((1:size(NotPref_Mat,2))/EEG.srate - tttt, squeeze(mean(NotPref_Mat,1)), 'Color', [244 194 66]/256, 'LineWidth', 1.2);
+plot((1:size(NotPref_Mat,2))/EEG.srate - tttt, squeeze(mean(NotPref_Mat,1))+0.5*squeeze(std(NotPref_Mat,1)), '--', 'Color', [244 194 66]/256);
+plot((1:size(NotPref_Mat,2))/EEG.srate - tttt, squeeze(mean(NotPref_Mat,1))-0.5*squeeze(std(NotPref_Mat,1)), '--', 'Color', [244 194 66]/256);
+set(gca,'Ydir','reverse')
+xlabel('time')
+legend([h1 h2], {'Preferred', 'Not preferred'}, 'Location', 'ne')
+hold off
+xlabel('time')
+xlim([-0.1 0.8])
+hold off

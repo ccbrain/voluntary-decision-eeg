@@ -18,12 +18,28 @@ timex = (1:size(FullData.Control100.u1000,2))/srate + timeshift;
 
 %% Setup configuration struct for LDA
 
-cfg_clf = mv_get_classifier_param('lda');
+cfg_LDA            =  [];
+cfg_LDA.classifier = 'lda';
+cfg_LDA.param      = struct('lambda','auto');
 
+cfg_SVM = mv_get_classifier_param('svm');
+cfg_SVM.classifier = 'svm';
+cfg_SVM.param.C          = 0.1;%[0.01 0.1 0.5];
+
+cfg_LR            = [];
+cfg_LR.classifier = 'logreg';
+cfg_LR.param      = struct('lambda','auto' );
+
+cfg_libSVM = mv_get_classifier_param('libsvm');
+cfg_libSVM.classifier = 'libsvm';
+cfg_libSVM.C          = 0.1;%[0.01 0.1 0.5];
+cfg_libSVM.kernel_type = 0; % 0 linear, 2 rbf
+%%%%%%%%%%%%%%%%%%%%%%%%%%Pick classifier
+cfg_clf = cfg_SVM;
 
 %%%%%%%%%%%%%%%% Hyperparams
 smoothing_window = 0.02; % sec
-timestamps       = [0.35];%[0.1 0.15 0.2 0.25 0.3 0.35];
+timestamps       = [0.2, 0.35, 0.5];
 %%%%%%%%%%%%%%%
 
 %% Loop with model training among the subjects
@@ -86,12 +102,21 @@ edata.compare2080 = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window
 labels.compare2080 = ones(1, size(edata.compare2080,1));
 labels.compare2080(size(tmpA,1):size(edata.compare2080,1)) = 2;
 
+tmpA = permute(FullData.pref.(subject_code),[3 1 2]);
+tmpB = permute(FullData.notpref.(subject_code),[3 1 2]);
+tmpA = addEvery2ndRows(tmpA);
+tmpB = addEvery2ndRows(tmpB);
+edata.comparePref = double([tmpA; tmpB]);
+edata.comparePref = applyToDimension(@(xx) gaussfilt(timex, xx, smoothing_window), edata.comparePref, 3);
+labels.comparePref = ones(1, size(edata.comparePref,1));
+labels.comparePref(size(tmpA,1):size(edata.comparePref,1)) = 2;
+
 avg_w = zeros(length(timestamps), size(edata.compare100,2));
 for tt = 1:length(timestamps)
     tx = find(timex >= timestamps(tt));
     tt_idx = tx(1);
     dd = squeeze(edata.compare100(:,:,tt_idx));
-    cc = train_lda(cfg_clf, dd,labels.compare100);
+    cc = train_svm(cfg_clf, dd,labels.compare100);
     activation = transformToInterpretable(dd,cc);
     avg_w(tt,:) = activation;%cc.w;
 end
@@ -103,7 +128,7 @@ for tt = 1:length(timestamps)
     tx = find(timex >= timestamps(tt));
     tt_idx = tx(1);
     dd = squeeze(edata.compare80(:,:,tt_idx));
-    cc = train_lda(cfg_clf, dd,labels.compare80);
+    cc = train_svm(cfg_clf, dd,labels.compare80);
     activation = transformToInterpretable(dd,cc);
     avg_w(tt,:) = activation;%cc.w;
 end
@@ -115,7 +140,7 @@ for tt = 1:length(timestamps)
     tx = find(timex >= timestamps(tt));
     tt_idx = tx(1);
     dd = squeeze(edata.compare20(:,:,tt_idx));
-    cc = train_lda(cfg_clf, dd,labels.compare20);
+    cc = train_svm(cfg_clf, dd,labels.compare20);
     activation = transformToInterpretable(dd,cc);
     avg_w(tt,:) = activation;%cc.w;
 end
@@ -127,7 +152,7 @@ for tt = 1:length(timestamps)
     tx = find(timex >= timestamps(tt));
     tt_idx = tx(1);
     dd = squeeze(edata.compare80100(:,:,tt_idx));
-    cc = train_lda(cfg_clf, dd,labels.compare80100);
+    cc = train_svm(cfg_clf, dd,labels.compare80100);
     activation = transformToInterpretable(dd,cc);
     avg_w(tt,:) = activation;%cc.w;
 end
@@ -141,7 +166,7 @@ for tt = 1:length(timestamps)
     tx = find(timex >= timestamps(tt));
     tt_idx = tx(1);
     dd = squeeze(edata.compare20100(:,:,tt_idx));
-    cc = train_lda(cfg_clf, dd,labels.compare20100);
+    cc = train_svm(cfg_clf, dd,labels.compare20100);
     activation = transformToInterpretable(dd,cc);
     avg_w(tt,:) = activation;%cc.w;
 end
@@ -154,34 +179,91 @@ for tt = 1:length(timestamps)
     tx = find(timex >= timestamps(tt));
     tt_idx = tx(1);
     dd = squeeze(edata.compare2080(:,:,tt_idx));
-    cc = train_lda(cfg_clf, dd,labels.compare2080);
+    cc = train_svm(cfg_clf, dd,labels.compare2080);
     % From S. Haufe 2014:
     activation = transformToInterpretable(dd,cc);
     avg_w(tt,:) = activation;%cc.w;
 end
 avg_w = mean(avg_w,1);
 all_weights.compare2080(sub_idx, :) = avg_w;
+
+% comparePREF
+avg_w = zeros(length(timestamps), size(edata.comparePref,2));
+for tt = 1:length(timestamps)
+    tx = find(timex >= timestamps(tt));
+    tt_idx = tx(1);
+    dd = squeeze(edata.comparePref(:,:,tt_idx));
+    cc = train_svm(cfg_clf, dd,labels.comparePref);
+    % From S. Haufe 2014:
+    activation = transformToInterpretable(dd,cc);
+    avg_w(tt,:) = activation;%cc.w;
 end
-save(['Data/ml_feature_importance_lda'], 'all_weights', 'timex', 'cfg_clf')
+avg_w = mean(avg_w,1);
+all_weights.comparePref(sub_idx, :) = avg_w;
+
+end
+%save(['Data/ml_feature_importance_lsvm'], 'all_weights', 'timex', 'cfg_clf')
 
 %%
 % Plotting the resuts
 load('Data/chanlocs');
+fields = fieldnames(all_weights);
+val.max = [];
+val.min = [];
+for i = 1:length(fields)
+    val.max = [val.max max(abs(mean(all_weights.(fields{i}))))];
+    val.min = [val.min min(abs(mean(all_weights.(fields{i}))))];
+end
+
+topoplot(abs(mean(all_weights.comparePref,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+
 figure;
-topoplot(mean(all_weights.compare100,1), chanlocs32)
+subplot(131)
+topoplot(abs(mean(all_weights.compare100,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
 title('Equal 100 vs Control 100')
-figure;
-topoplot(mean(all_weights.compare80,1), chanlocs32)
+subplot(132)
+topoplot(abs(mean(all_weights.compare80,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
 title('Equal 80 vs Control 80')
-figure;
-topoplot(mean(all_weights.compare80,1), chanlocs32)
+subplot(133)
+topoplot(abs(mean(all_weights.compare80,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
 title('Equal 20 vs Control 20')
 figure;
-topoplot(mean(all_weights.compare80100,1), chanlocs32)
+subplot(131)
+topoplot(abs(mean(all_weights.compare80100,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
 title('Equal 80 vs Equal 100')
-figure;
-topoplot(mean(all_weights.compare20100,1), chanlocs32)
+subplot(132)
+topoplot(abs(mean(all_weights.compare20100,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
 title('Equal 20 vs Equal 100')
+subplot(133)
+topoplot(abs(mean(all_weights.compare2080,1)), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+title('Equal 20 vs Equal 80')
+
+%%
+fields = fieldnames(all_weights);
+val.max = [];
+val.min = [];
+for i = 1:length(fields)
+    val.max = [val.max max(mean(all_weights.(fields{i})))];
+    val.min = [val.min min(mean(all_weights.(fields{i})))];
+end
+
 figure;
-topoplot(mean(all_weights.compare2080,1), chanlocs32)
+subplot(131)
+topoplot(mean(all_weights.compare100,1), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+title('Equal 100 vs Control 100')
+subplot(132)
+topoplot(mean(all_weights.compare80,1), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+title('Equal 80 vs Control 80')
+subplot(133)
+topoplot(mean(all_weights.compare80,1), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+title('Equal 20 vs Control 20')
+figure;
+subplot(131)
+topoplot(mean(all_weights.compare80100,1), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+title('Equal 80 vs Equal 100')
+subplot(132)
+topoplot(mean(all_weights.compare20100,1), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
+title('Equal 20 vs Equal 100')
+subplot(133)
+topoplot(mean(all_weights.compare2080,1), chanlocs32, 'maplimits', [min(val.min), max(val.max)])
 title('Equal 20 vs Equal 80')

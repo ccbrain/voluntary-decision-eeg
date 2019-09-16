@@ -24,22 +24,25 @@ cfg_LDA.param      = struct('lambda','auto');
 
 cfg_SVM = mv_get_classifier_param('svm');
 cfg_SVM.classifier = 'svm';
-cfg_SVM.C          = [0.01 0.1 0.5];
-
+cfg_SVM.param.C          = 0.1;%[0.01 0.1 0.5];
 
 cfg_LR            = [];
 cfg_LR.classifier = 'logreg';
-cfg_LR.param      = struct('lambda','1' );
+cfg_LR.param      = struct('lambda','auto' );
 
+cfg_libSVM = mv_get_classifier_param('libsvm');
+cfg_libSVM.classifier = 'libsvm';
+cfg_libSVM.C          = 0.1;%[0.01 0.1 0.5];
+cfg_libSVM.kernel_type = 0; % 0 linear, 2 rbf
 %%%%%%%%%%%%%%%%%%%%%%%%%%Pick classifier
-cfg_clf = cfg_LDA;
+cfg_clf = cfg_SVM;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 cfg_clf.CV         = 'kfold';
 cfg_clf.K          = 5;
-cfg_clf.repeat     = 8;
+cfg_clf.repeat     = 3;
 cfg_clf.metric     = 'acc';
 cfg_clf.balance    = 'undersample';
-cfg.normalise      = 'demean';
+cfg_clf.normalise  = 'demean';
 
 %% Loop with model training among the subjects
 for sub_idx = 1 : length(subjects) %sub_idx = 1;
@@ -99,21 +102,22 @@ save(['Data/ml_timextime_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg
 
 %%
 load(['Data/ml_timextime_results_' cfg_clf.classifier], 'all_auc', 'timex', 'cfg_clf')
-figure
+figure;
+subplot(131)
 cfg_plot= [];
 cfg_plot.x   = timex;
 cfg_plot.y   = cfg_plot.x;
 mv_plot_2D(cfg_plot, squeeze(mean(all_auc.compare100(:, :, :),1)));
 colormap jet
 title('Accuracy: Equal 100 vs Control 100')
-figure
+subplot(132)
 cfg_plot= [];
 cfg_plot.x   = timex;
 cfg_plot.y   = cfg_plot.x;
 mv_plot_2D(cfg_plot, squeeze(mean(all_auc.compare80(:, :, :),1)));
 colormap jet
 title('Accuracy: Equal 80 vs Control 80')
-figure
+subplot(133)
 cfg_plot= [];
 cfg_plot.x   = timex;
 cfg_plot.y   = cfg_plot.x;
@@ -121,20 +125,21 @@ mv_plot_2D(cfg_plot, squeeze(mean(all_auc.compare20(:, :, :),1)));
 colormap jet
 title('Accuracy: Equal 20 vs Control 20')
 figure
+subplot(131)
 cfg_plot= [];
 cfg_plot.x   = timex;
 cfg_plot.y   = cfg_plot.x;
 mv_plot_2D(cfg_plot, squeeze(mean(all_auc.compare80100(:, :, :),1)));
 colormap jet
 title('Accuracy: Equal 80 vs Equal 100')
-figure
+subplot(132)
 cfg_plot= [];
 cfg_plot.x   = timex;
 cfg_plot.y   = cfg_plot.x;
 mv_plot_2D(cfg_plot, squeeze(mean(all_auc.compare20100(:, :, :),1)));
 colormap jet
 title('Accuracy: Equal 20 vs Equal 100')
-figure
+subplot(133)
 cfg_plot= [];
 cfg_plot.x   = timex;
 cfg_plot.y   = cfg_plot.x;
