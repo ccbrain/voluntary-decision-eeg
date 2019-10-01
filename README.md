@@ -18,7 +18,14 @@ The raw data for this study you minght find online: TODO.
 
 ## Behavioural analysis
 
-We used the above results to compute ERP correlated with bahavioural model of decision making. The STAN script for this you might find here:
+We used the above results to compute ERP correlated with bahavioural model of decision making. The R/STAN script for this you might find here:
+```
+Behavavioral_Modelling/
+    Behavioral_modelling.R
+    summarySE2.R
+```
+
+The folder above contains also data for the behavioural model fitting step.
 
 ## Data
 Data for this project we uploaded here: .
