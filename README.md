@@ -28,4 +28,4 @@ Behavavioral_Modelling/
 The folder above contains also data for the behavioural model fitting step.
 
 ## Data
-Data for this project we uploaded here: .
+Data for this project is uploaded here: https://figshare.com/articles/eeg-volition-data-afterica_tar_gz/9989552
