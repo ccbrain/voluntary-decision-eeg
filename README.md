@@ -1,6 +1,6 @@
 # Voluntary Decision project
 
-This is code with the analysis for the project: *Breaking deadlocks: reward probability and spontaneous preference affected voluntary decision processes*.
+This is a code with the analysis for the project: [Breaking deadlocks: reward probability and spontaneous preference affected voluntary decision processes](https://link.springer.com/article/10.1007/s42113-020-00096-6). Please cite this article if you used any of these code or data.
 
 ## EEG analysis
 
